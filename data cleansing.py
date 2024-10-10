@@ -19,6 +19,38 @@ data = data.dropna()
 data['Participation in Extracurricular Activities'] = data['Participation in Extracurricular Activities'].map({'Yes': 1, 'No': 0})
 data['Parent Education Level'] = data['Parent Education Level'].map({'High School': 1, 'Bachelor': 2, 'Master': 3, 'Doctorate': 4})
 
+# Function to detect outliers using IQR
+def detect_outliers_iqr(data):
+    Q1 = data.quantile(0.25)
+    Q3 = data.quantile(0.75)
+    IQR = Q3 - Q1
+    # Define the lower and upper bounds for outliers
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+    return (data < lower_bound) | (data > upper_bound)
+
+# Apply outlier detection to the specific numerical columns
+outliers_study_hours = detect_outliers_iqr(data['Study Hours per Week'])
+outliers_attendance_rate = detect_outliers_iqr(data['Attendance Rate'])
+outliers_previous_grades = detect_outliers_iqr(data['Previous Grades'])
+
+# Combine the results into one DataFrame
+outliers_df = pd.DataFrame({
+    'Study Hours Outlier': outliers_study_hours,
+    'Attendance Rate Outlier': outliers_attendance_rate,
+    'Previous Grades Outlier': outliers_previous_grades
+})
+
+# Keep only rows that do not have any outliers in any of the three columns
+data_clean = data[~outliers_df.any(axis=1)]
+
+# Shuffle the cleaned dataset
+df_clean_shuffled = data_clean.sample(frac=1, random_state=42).reset_index(drop=True)
+
+# Output the cleaned and shuffled data
+print("Cleaned and Shuffled Data (Outliers Removed):")
+print(df_clean_shuffled)
+
 # Step 2: Feature Selection
 # เลือก Features (X) และ Target (y)
 X = data[['Study Hours per Week', 'Attendance Rate', 'Previous Grades', 'Participation in Extracurricular Activities', 'Parent Education Level']]
